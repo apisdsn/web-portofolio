@@ -1,0 +1,85 @@
+# Production on the MoniShield server (< 2 GB RAM).
+# - Images are built by GitHub Actions and pulled from ghcr.io; nothing is built on the server.
+# - PostgreSQL is MoniShield's container, with a separate "portfolio" database and role.
+# - HTTPS is served by MoniShield's Caddy ("https" profile); see deploy/Caddyfile.portfolio.
+# deploy/remote-deploy.sh copies this file to $DEPLOY_DIR/docker-compose.yml on the server.
+name: portfolio
+
+x-logging: &logging
+  driver: json-file
+  options: { max-size: "10m", max-file: "3" }
+
+services:
+  api:
+    image: ghcr.io/apisdsn/web-portofolio-api:${PORTFOLIO_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/${PORTFOLIO_DB_NAME:-portfolio}
+      DB_USERNAME: ${PORTFOLIO_DB_USER:-portfolio}
+      DB_PASSWORD: ${PORTFOLIO_DB_PASSWORD:?Set PORTFOLIO_DB_PASSWORD in .env}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:?Set ADMIN_EMAIL in .env}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env}
+      COOKIE_SECURE: "true"
+      REVALIDATE_URL: http://web:3000/internal/revalidate
+      REVALIDATE_SECRET: ${REVALIDATE_SECRET:?Set REVALIDATE_SECRET in .env}
+      MEDIA_DIR: /data/media
+      JAVA_OPTS: -XX:MaxRAMPercentage=60 -XX:+UseSerialGC -Xss512k -XX:+ExitOnOutOfMemoryError
+    mem_limit: 512m
+    volumes:
+      - media:/data/media
+    networks:
+      default:
+      monishield:
+        aliases: [portfolio-api]
+    logging: *logging
+
+  web:
+    image: ghcr.io/apisdsn/web-portofolio-web:${PORTFOLIO_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      API_INTERNAL_URL: http://api:8080
+      REVALIDATE_SECRET: ${REVALIDATE_SECRET}
+      SITE_URL: https://${PORTFOLIO_DOMAIN:?Set PORTFOLIO_DOMAIN in .env}
+      NODE_OPTIONS: --max-old-space-size=160
+    mem_limit: 256m
+    depends_on:
+      - api
+    networks:
+      default:
+      monishield:
+        aliases: [portfolio-web]
+    logging: *logging
+
+  # Daily pg_dump of the portfolio database only. Must match the server's major version (MoniShield runs PostgreSQL 17).
+  db-backup:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      PGHOST: postgres
+      PGUSER: ${PORTFOLIO_DB_USER:-portfolio}
+      PGPASSWORD: ${PORTFOLIO_DB_PASSWORD}
+      PGDATABASE: ${PORTFOLIO_DB_NAME:-portfolio}
+      RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-7}
+    mem_limit: 64m
+    volumes:
+      - ./backups:/backups
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        while true; do
+          pg_dump -Fc -f /backups/portfolio-$$(date +%Y%m%d-%H%M).dump && echo "backup ok"
+          find /backups -name 'portfolio-*.dump' -mtime +$${RETENTION_DAYS} -delete
+          sleep 86400
+        done
+    networks:
+      - monishield
+    logging: *logging
+
+volumes:
+  media:
+
+networks:
+  monishield:
+    external: true
+    name: ${MONISHIELD_NETWORK:-monishield_default}
