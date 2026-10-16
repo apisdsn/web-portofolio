@@ -1,0 +1,62 @@
+server:
+  port: 8080
+  forward-headers-strategy: framework
+
+spring:
+  application:
+    name: portfolio-api
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/portfolio}
+    username: ${DB_USERNAME:portfolio}
+    password: ${DB_PASSWORD:portfolio}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+  jackson:
+    default-property-inclusion: always
+    serialization:
+      write-dates-as-timestamps: false
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:change-me-to-a-long-random-string-of-at-least-32-bytes}
+    ttl: ${JWT_TTL:PT12H}
+  cookie:
+    name: portfolio_token
+    secure: ${COOKIE_SECURE:false}
+  admin:
+    email: ${ADMIN_EMAIL:}
+    password: ${ADMIN_PASSWORD:}
+  login:
+    max-attempts: 5
+    window: PT15M
+  media:
+    dir: ${MEDIA_DIR:./data/media}
+  revalidate:
+    url: ${REVALIDATE_URL:http://localhost:3000/internal/revalidate}
+    secret: ${REVALIDATE_SECRET:change-me}
+
+springdoc:
+  api-docs:
+    path: /api/openapi.json
+  swagger-ui:
+    path: /api/docs
+
+management:
+  endpoints:
+    web:
+      base-path: /api/actuator
+      exposure:
+        include: health
