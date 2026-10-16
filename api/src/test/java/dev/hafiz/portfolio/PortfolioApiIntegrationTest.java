@@ -54,12 +54,42 @@ class PortfolioApiIntegrationTest {
         mvc.perform(get("/api/public/site"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.profile.fullName").value("Hafiz Adha Febrian"))
+                .andExpect(jsonPath("$.profile.logoText").value("~/apisdsn"))
                 .andExpect(jsonPath("$.profile.headline.en").exists())
                 .andExpect(jsonPath("$.profile.photoMediaId").isNotEmpty())
                 .andExpect(jsonPath("$.experiences.length()").value(5))
                 .andExpect(jsonPath("$.experiences[0].current").value(true))
                 .andExpect(jsonPath("$.caseStudies[0].slug").value("column-level-encryption"))
                 .andExpect(jsonPath("$.caseStudies[0].body").doesNotExist());
+    }
+
+    @Test
+    void brandingIsPublic() throws Exception {
+        mvc.perform(get("/api/public/branding"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.logoText").value("~/apisdsn"))
+                .andExpect(jsonPath("$.accentColor").value("#1B6E47"));
+    }
+
+    @Test
+    void adminCanChangeTheLogo() throws Exception {
+        Cookie session = login();
+        String profile = mvc.perform(get("/api/admin/profile").cookie(session))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        mvc.perform(put("/api/admin/profile").cookie(session).header(CSRF, CSRF_VALUE)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(profile.replace("\"logoText\":\"~/apisdsn\"", "\"logoText\":\"~/hafiz\"")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.logoText").value("~/hafiz"));
+
+        mvc.perform(get("/api/public/branding")).andExpect(jsonPath("$.logoText").value("~/hafiz"));
+
+        // restore so other tests see the seeded value
+        mvc.perform(put("/api/admin/profile").cookie(session).header(CSRF, CSRF_VALUE)
+                        .contentType(MediaType.APPLICATION_JSON).content(profile))
+                .andExpect(status().isOk());
     }
 
     @Test

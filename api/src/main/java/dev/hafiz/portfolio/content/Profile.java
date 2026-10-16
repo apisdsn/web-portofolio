@@ -10,6 +10,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -35,6 +36,11 @@ public class Profile {
 
     @NotBlank
     private String fullName;
+
+    /** Text logo in the site header and admin, e.g. "~/apisdsn". */
+    @NotBlank
+    @Size(max = 40)
+    private String logoText;
 
     @NotNull
     @JdbcTypeCode(SqlTypes.JSON)

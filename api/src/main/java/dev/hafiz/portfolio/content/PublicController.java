@@ -72,6 +72,14 @@ public class PublicController {
                 certifications.findByPublishedTrueOrderBySortOrderAscIdAsc());
     }
 
+    /** Small payload for pages that only need the logo and colour (admin login and dashboard). */
+    @GetMapping("/branding")
+    public Map<String, String> branding() {
+        Profile profile = profiles.findById(Profile.SINGLETON_ID)
+                .orElseThrow(() -> new NotFoundException("profile", Profile.SINGLETON_ID));
+        return Map.of("logoText", profile.getLogoText(), "accentColor", profile.getAccentColor());
+    }
+
     @GetMapping("/case-studies/{slug}")
     public CaseStudy caseStudy(@PathVariable String slug) {
         return caseStudies.findBySlugAndPublishedTrue(slug)
