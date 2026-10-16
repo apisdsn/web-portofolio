@@ -49,7 +49,9 @@ export default async function HomePage({ params }: Params) {
       <SiteHeader lang={lang} path="" />
 
       <main id="top">
-        <section className="mx-auto flex max-w-page flex-wrap-reverse items-center gap-12 px-6 pb-20 pt-16 sm:pt-24">
+        {/* flex-wrap-reverse flips the cross axis, so items-end means "top": the photo circle
+            (84px below the status bubble) lines up with the headline instead of the block's middle */}
+        <section className="mx-auto flex max-w-page flex-wrap-reverse items-end gap-12 px-6 pb-20 pt-16 sm:pt-24">
           <div className="flex min-w-0 flex-[999_1_560px] flex-col gap-6">
             <p className="font-mono text-[13px] text-muted">{profile.location} · WIB (UTC+7)</p>
             <p className="text-lg font-semibold">{profile.fullName}</p>
