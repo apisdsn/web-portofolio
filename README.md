@@ -69,12 +69,13 @@ Alur otomatis setiap push ke `master`: test → build & push image → SSH ke se
 
 ### Setup sekali di awal
 
-1. **Secrets repo** (Settings → Secrets and variables → Actions), nilainya sama dengan di repo MoniShield:
-   `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY`, `DEPLOY_KNOWN_HOSTS`, dan opsional `DEPLOY_PORT`.
-   Folder tujuan default `/srv/web-portofolio` (ubah lewat *variable* `DEPLOY_DIR`).
+1. **Secrets** di Settings → Environments → `production` (sama seperti MoniShield):
+   `DEPLOY_HOST`, `DEPLOY_USER` (= `deploy`, user khusus deploy yang dibuat untuk MoniShield), `DEPLOY_SSH_KEY`,
+   `DEPLOY_KNOWN_HOSTS`, dan opsional `DEPLOY_PORT`. Folder tujuan default `/srv/web-portofolio`
+   (ubah lewat *variable* `DEPLOY_DIR`). Public key-nya ditambahkan ke `/home/deploy/.ssh/authorized_keys`.
 2. **Di server**, sebagai user deploy:
    ```bash
-   sudo mkdir -p /srv/web-portofolio && sudo chown "$USER": /srv/web-portofolio
+   sudo install -d -o deploy -g deploy /srv/web-portofolio
    cd /srv/web-portofolio
    # salin isi deploy/.env.server.example ke .env lalu isi semua nilainya
    nano .env && chmod 600 .env

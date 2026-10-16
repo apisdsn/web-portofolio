@@ -87,6 +87,7 @@ jobs:
     name: Deploy to the server
     needs: publish
     runs-on: ubuntu-latest
+    environment: production   # same as MoniShield: Settings -> Environments -> production holds the DEPLOY_* secrets
     concurrency: { group: deploy-production, cancel-in-progress: false }
     permissions:
       contents: read
