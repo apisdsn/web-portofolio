@@ -1,0 +1,21 @@
+{$DOMAIN} {
+	encode zstd gzip
+
+	# Revalidation is only called from inside the Docker network
+	handle /internal/* {
+		respond 404
+	}
+
+	handle /api/* {
+		reverse_proxy api:8080
+	}
+
+	handle {
+		reverse_proxy web:3000
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		-Server
+	}
+}

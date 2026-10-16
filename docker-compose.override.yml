@@ -1,0 +1,12 @@
+# Local development: loaded automatically by `docker compose up`.
+# Website: http://localhost:3000  ·  Admin: http://localhost:3000/admin  ·  API docs: http://localhost:8080/api/docs
+services:
+  db:
+    ports:
+      - "5432:5432"
+  api:
+    ports:
+      - "8080:8080"
+  web:
+    ports:
+      - "3000:3000"

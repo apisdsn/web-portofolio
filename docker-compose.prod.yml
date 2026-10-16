@@ -1,0 +1,54 @@
+# Production: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+# Caddy serves HTTPS for $DOMAIN (certificates are issued automatically) and is the only public entry point.
+services:
+  api:
+    environment:
+      COOKIE_SECURE: "true"
+
+  web:
+    environment:
+      SITE_URL: https://${DOMAIN}
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN:?Set DOMAIN in .env}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - web
+      - api
+
+  db-backup:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      PGHOST: db
+      PGUSER: ${POSTGRES_USER:-portfolio}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB:-portfolio}
+      RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-7}
+    volumes:
+      - ./backups:/backups
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        while true; do
+          pg_dump -Fc -f /backups/portfolio-$$(date +%Y%m%d-%H%M).dump && echo "backup ok"
+          find /backups -name 'portfolio-*.dump' -mtime +$${RETENTION_DAYS} -delete
+          sleep 86400
+        done
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  caddy-data:
+  caddy-config:
