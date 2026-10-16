@@ -56,7 +56,42 @@ npm install
 REVALIDATE_SECRET=dev-secret npm run dev
 ```
 
-## Deploy ke VPS
+## Deploy di server MoniShield (setup produksi saat ini)
+
+Portfolio berbagi server dengan MoniShield (RAM < 2 GB):
+
+- **PostgreSQL**: memakai container `postgres` milik MoniShield, dengan database dan role `portfolio` sendiri. Role ini tidak bisa membuka database `monishield`.
+- **HTTPS**: Caddy milik MoniShield (profile `https`) melayani domain portfolio juga; portfolio tidak menjalankan Caddy sendiri sehingga tidak berebut port 80/443.
+- **Image** dibuild di GitHub Actions dan disimpan di `ghcr.io`; server hanya `docker compose pull`. Build Maven/Next.js di server < 2 GB hampir pasti kehabisan memori.
+- Batas memori: api 512 MB, web 256 MB, backup 64 MB.
+
+Alur otomatis setiap push ke `master`: test → build & push image → SSH ke server → `deploy/remote-deploy.sh`.
+
+### Setup sekali di awal
+
+1. **Secrets repo** (Settings → Secrets and variables → Actions), nilainya sama dengan di repo MoniShield:
+   `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY`, `DEPLOY_KNOWN_HOSTS`, dan opsional `DEPLOY_PORT`.
+   Folder tujuan default `/srv/web-portofolio` (ubah lewat *variable* `DEPLOY_DIR`).
+2. **Di server**, sebagai user deploy:
+   ```bash
+   sudo mkdir -p /srv/web-portofolio && sudo chown "$USER": /srv/web-portofolio
+   cd /srv/web-portofolio
+   # salin isi deploy/.env.server.example ke .env lalu isi semua nilainya
+   nano .env && chmod 600 .env
+   ```
+3. **DNS**: buat record A untuk `PORTFOLIO_DOMAIN` ke IP server.
+4. **Caddy MoniShield**: tambahkan blok dari `deploy/Caddyfile.portfolio` ke `deploy/Caddyfile.letsencrypt` di repo MoniShield (ganti domainnya), commit, lalu deploy MoniShield seperti biasa. Edit langsung di server akan hilang karena deploy MoniShield menjalankan `git reset --hard`.
+5. Jalankan workflow CI (push ke `master` atau tombol *Run workflow*).
+
+`remote-deploy.sh` otomatis membuat role dan database `portfolio` di PostgreSQL MoniShield jika belum ada, lalu Flyway membuat tabel dan konten awal saat api pertama kali start.
+
+### Backup
+
+- Database: service `db-backup` menyimpan `pg_dump` harian ke `/srv/web-portofolio/backups` (default 7 hari).
+- File upload (foto, CV): volume Docker `portfolio_media`. Ikutkan dalam backup server, misalnya:
+  `docker run --rm -v portfolio_media:/m -v "$PWD/backups":/b alpine tar czf /b/media-$(date +%F).tgz -C /m .`
+
+## Deploy ke VPS tersendiri
 
 ```bash
 cp .env.example .env   # isi semua nilai, termasuk DOMAIN
