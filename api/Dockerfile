@@ -14,7 +14,9 @@ RUN addgroup -S app && adduser -S app -G app \
 COPY --from=build /app/target/portfolio-api-*.jar app.jar
 USER app
 ENV MEDIA_DIR=/data/media
+# Override on small servers, e.g. "-XX:MaxRAMPercentage=60 -XX:+UseSerialGC -Xss512k"
+ENV JAVA_OPTS="-XX:MaxRAMPercentage=75"
 EXPOSE 8080
-HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
     CMD wget -qO- http://localhost:8080/api/actuator/health || exit 1
-ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "-jar", "/app/app.jar"]
+ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar /app/app.jar"]
