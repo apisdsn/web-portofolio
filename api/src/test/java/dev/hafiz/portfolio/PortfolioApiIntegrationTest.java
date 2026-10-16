@@ -97,7 +97,7 @@ class PortfolioApiIntegrationTest {
         mvc.perform(get("/api/public/case-studies/column-level-encryption"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.body.id").isNotEmpty())
-                .andExpect(jsonPath("$.metrics[0].value").value("3"));
+                .andExpect(jsonPath("$.metrics[0].value").value("4"));
 
         mvc.perform(get("/api/public/case-studies/does-not-exist"))
                 .andExpect(status().isNotFound());
