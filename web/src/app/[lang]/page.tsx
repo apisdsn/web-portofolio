@@ -46,7 +46,7 @@ export default async function HomePage({ params }: Params) {
 
   return (
     <div style={{ '--accent': profile.accentColor } as React.CSSProperties}>
-      <SiteHeader lang={lang} path="" />
+      <SiteHeader lang={lang} path="" logo={profile.logoText} />
 
       <main id="top">
         {/* flex-wrap-reverse flips the cross axis, so items-end means "top": the photo circle

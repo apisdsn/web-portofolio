@@ -3,10 +3,12 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { api, ApiError } from '@/lib/admin/client';
+import { useLogoText } from '@/lib/admin/branding';
 import { Button, FieldShell, inputClass, Notice } from '@/components/admin/ui';
 
 export default function LoginPage() {
   const router = useRouter();
+  const logo = useLogoText();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +36,7 @@ export default function LoginPage() {
     <main className="flex min-h-screen items-center justify-center bg-ground px-6">
       <form onSubmit={submit} className="flex w-full max-w-sm flex-col gap-5 rounded-xl border border-line bg-white p-8">
         <div>
-          <p className="font-mono text-sm font-semibold">~/apisdsn admin</p>
+          <p className="font-mono text-sm font-semibold">{logo ? `${logo} admin` : 'Admin'}</p>
           <h1 className="mt-1 text-2xl font-semibold">Masuk</h1>
         </div>
         <FieldShell label="Email" htmlFor="email">

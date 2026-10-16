@@ -6,9 +6,11 @@ interface Props {
   lang: Lang;
   /** Path after the language prefix, used for the language switch ("" on home). */
   path: string;
+  /** Text logo from the profile, editable in the admin. */
+  logo: string;
 }
 
-export function SiteHeader({ lang, path }: Props) {
+export function SiteHeader({ lang, path, logo }: Props) {
   const t = ui[lang];
   const home = `/${lang}`;
   const links = [
@@ -25,7 +27,7 @@ export function SiteHeader({ lang, path }: Props) {
         className="mx-auto flex max-w-page flex-wrap items-center justify-between gap-4 px-6 py-4"
       >
         <Link href={home} className="font-mono text-[15px] font-semibold">
-          ~/apisdsn
+          {logo}
         </Link>
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[15px]">
           {links.map((link) => (

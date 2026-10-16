@@ -150,6 +150,7 @@ export const RESOURCES: ResourceDef[] = [
 
 export const PROFILE_FIELDS: FieldDef[] = [
   { name: 'photoMediaId', label: 'Foto profil', type: 'image' },
+  { name: 'logoText', label: 'Logo (teks di kiri atas)', type: 'text', help: 'Tampil di header website dan dashboard admin, mis. ~/apisdsn. Maks. 40 karakter.' },
   { name: 'fullName', label: 'Nama lengkap', type: 'text' },
   { name: 'statusText', label: 'Teks gelembung status', type: 'localized', help: 'Singkat, maks. ±15 karakter agar muat di mobile' },
   { name: 'headline', label: 'Headline', type: 'localizedTextarea' },

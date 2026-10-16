@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/admin/client';
+import { useLogoText } from '@/lib/admin/branding';
 import { RESOURCES } from '@/lib/admin/resources';
 import { Button } from './ui';
 
@@ -18,6 +19,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [email, setEmail] = useState<string | null>(null);
+  const logo = useLogoText();
 
   useEffect(() => {
     api<{ email: string }>('/auth/me')
@@ -43,7 +45,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen flex-wrap bg-ground">
       <aside className="flex w-full flex-col gap-6 border-b border-line bg-white p-5 md:sticky md:top-0 md:h-screen md:w-64 md:border-b-0 md:border-r">
         <div className="flex flex-col gap-1">
-          <span className="font-mono text-[15px] font-semibold">~/apisdsn admin</span>
+          <span className="font-mono text-[15px] font-semibold">{logo ? `${logo} admin` : 'Admin'}</span>
           <span className="truncate text-xs text-muted">{email}</span>
         </div>
         <nav aria-label="Admin" className="flex flex-wrap gap-1 md:flex-col">

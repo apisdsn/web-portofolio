@@ -11,6 +11,8 @@ export type Localized = Partial<Record<Lang, string>>;
 export interface Profile {
   id: number;
   fullName: string;
+  /** Text logo, e.g. "~/apisdsn" */
+  logoText: string;
   headline: Localized;
   subHeadline: Localized;
   statusText: Localized;

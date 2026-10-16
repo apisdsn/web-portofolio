@@ -48,7 +48,7 @@ export default async function CaseStudyPage({ params }: Params) {
 
   return (
     <div style={{ '--accent': site.profile.accentColor } as React.CSSProperties}>
-      <SiteHeader lang={lang} path={`/case-study/${caseStudy.slug}`} />
+      <SiteHeader lang={lang} path={`/case-study/${caseStudy.slug}`} logo={site.profile.logoText} />
 
       <main className="mx-auto flex max-w-[808px] flex-col gap-14 px-6 pb-24 pt-12">
         <div className="flex flex-col gap-5">
