@@ -1,12 +1,12 @@
-# Site block for MoniShield's Caddy ("https" profile). Append it to MoniShield's deploy/Caddyfile.letsencrypt
-# and COMMIT it in the MoniShield repo: MoniShield's deploy runs `git reset --hard`, which would drop an edit
-# made only on the server. Replace the domain with PORTFOLIO_DOMAIN from the portfolio .env.
+# Site blocks for MoniShield's Caddy ("https" profile). Append them to MoniShield's deploy/Caddyfile.letsencrypt
+# and COMMIT them in the MoniShield repo: MoniShield's deploy runs `git reset --hard`, which would drop an edit
+# made only on the server. DNS for apisdsn.com and www.apisdsn.com must point to the server.
 #
 # portfolio-api / portfolio-web are network aliases the portfolio containers register on monishield_default.
 
-portfolio.example.com {
+apisdsn.com {
 	encode zstd gzip
-	header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+	header Strict-Transport-Security "max-age=31536000"
 
 	# Revalidation is only called from inside Docker (api -> web)
 	handle /internal/* {
@@ -20,4 +20,8 @@ portfolio.example.com {
 	handle {
 		reverse_proxy portfolio-web:3000
 	}
+}
+
+www.apisdsn.com {
+	redir https://apisdsn.com{uri} permanent
 }

@@ -79,8 +79,8 @@ Alur otomatis setiap push ke `master`: test → build & push image → SSH ke se
    # salin isi deploy/.env.server.example ke .env lalu isi semua nilainya
    nano .env && chmod 600 .env
    ```
-3. **DNS**: buat record A untuk `PORTFOLIO_DOMAIN` ke IP server.
-4. **Caddy MoniShield**: tambahkan blok dari `deploy/Caddyfile.portfolio` ke `deploy/Caddyfile.letsencrypt` di repo MoniShield (ganti domainnya), commit, lalu deploy MoniShield seperti biasa. Edit langsung di server akan hilang karena deploy MoniShield menjalankan `git reset --hard`.
+3. **DNS**: buat record A `apisdsn.com` dan `www.apisdsn.com` ke IP server.
+4. **Caddy MoniShield**: tambahkan blok dari `deploy/Caddyfile.portfolio` ke `deploy/Caddyfile.letsencrypt` di repo MoniShield (sudah berisi `apisdsn.com` dan redirect `www`), commit, lalu deploy MoniShield seperti biasa. Edit langsung di server akan hilang karena deploy MoniShield menjalankan `git reset --hard`.
 5. Jalankan workflow CI (push ke `master` atau tombol *Run workflow*).
 
 `remote-deploy.sh` otomatis membuat role dan database `portfolio` di PostgreSQL MoniShield jika belum ada, lalu Flyway membuat tabel dan konten awal saat api pertama kali start.
