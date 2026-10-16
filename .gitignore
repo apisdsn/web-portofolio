@@ -1,0 +1,24 @@
+# Environment
+.env
+.env.local
+*.env.local
+
+# Java / Maven
+api/target/
+api/data/
+*.iml
+.idea/
+
+# Node / Next.js
+web/node_modules/
+web/.next/
+web/out/
+web/next-env.d.ts.bak
+*.tsbuildinfo
+
+# Runtime data
+backups/
+data/
+
+# OS
+.DS_Store
