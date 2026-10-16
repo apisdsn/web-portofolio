@@ -78,7 +78,8 @@ export default async function HomePage({ params }: Params) {
               </a>
             </div>
           </div>
-          <div className="flex flex-none justify-center">
+          {/* Full width (centred) while stacked on small screens; its own column from lg */}
+          <div className="flex w-full justify-center lg:w-auto lg:flex-none">
             <AvatarBubble
               src={mediaUrl(profile.photoMediaId)}
               alt={t.photoAlt(profile.fullName)}
