@@ -5,6 +5,7 @@ export const ui = {
   id: {
     nav: { caseStudy: 'Case study', experience: 'Pengalaman', projects: 'Proyek', skills: 'Keahlian', contact: 'Kontak' },
     languageGroup: 'Bahasa',
+    sectionsNav: 'Bagian halaman',
     readCaseStudy: 'Baca case study',
     contactMe: 'Hubungi saya',
     sections: {
@@ -38,6 +39,7 @@ export const ui = {
   en: {
     nav: { caseStudy: 'Case study', experience: 'Experience', projects: 'Projects', skills: 'Skills', contact: 'Contact' },
     languageGroup: 'Language',
+    sectionsNav: 'Page sections',
     readCaseStudy: 'Read the case study',
     contactMe: 'Get in touch',
     sections: {

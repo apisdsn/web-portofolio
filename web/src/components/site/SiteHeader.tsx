@@ -65,6 +65,21 @@ export function SiteHeader({ lang, path, logo }: Props) {
           </a>
         </div>
       </nav>
+      {/* Phones: the section links don't fit in the top bar, so they get their own swipeable row */}
+      <nav aria-label={t.sectionsNav} className="border-t border-line sm:hidden">
+        <ul className="flex gap-1 overflow-x-auto px-4 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {links.map((link) => (
+            <li key={link.href} className="shrink-0">
+              <a
+                href={link.href}
+                className="inline-flex min-h-11 items-center whitespace-nowrap rounded-md px-3 text-[15px] text-muted hover:bg-chip hover:text-ink"
+              >
+                {link.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
     </header>
   );
 }
