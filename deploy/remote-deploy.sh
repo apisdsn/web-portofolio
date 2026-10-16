@@ -17,6 +17,15 @@ fail() { echo "error: $*" >&2; exit 1; }
 cd "$DIR" || fail "$DIR does not exist"
 [ -f docker-compose.yml ] || fail "$DIR/docker-compose.yml is missing"
 [ -f .env ] || fail "$DIR/.env is missing. Create it from deploy/.env.server.example (README, section Deploy)."
+grep -q '^PORTFOLIO_DOMAIN=' .env \
+  || fail "$DIR/.env is not the server .env (no PORTFOLIO_DOMAIN). Create it from deploy/.env.server.example."
+
+# Only the server compose file: a docker-compose.override.yml from a repo checkout (development ports,
+# a "db" service) would otherwise be merged in automatically.
+export COMPOSE_FILE=docker-compose.yml
+if [ -e docker-compose.override.yml ] || [ -d .git ]; then
+  echo "warning: $DIR looks like a repo checkout; only .env, docker-compose.yml and backups/ are needed here" >&2
+fi
 
 # Read single values from .env without sourcing it (values may contain shell characters)
 env_value() {
