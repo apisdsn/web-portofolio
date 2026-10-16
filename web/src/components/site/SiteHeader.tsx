@@ -25,7 +25,7 @@ export function SiteHeader({ lang, path }: Props) {
         className="mx-auto flex max-w-page flex-wrap items-center justify-between gap-4 px-6 py-4"
       >
         <Link href={home} className="font-mono text-[15px] font-semibold">
-          ~/hafiz
+          ~/apisdsn
         </Link>
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[15px]">
           {links.map((link) => (

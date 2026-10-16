@@ -34,7 +34,7 @@ export default function LoginPage() {
     <main className="flex min-h-screen items-center justify-center bg-ground px-6">
       <form onSubmit={submit} className="flex w-full max-w-sm flex-col gap-5 rounded-xl border border-line bg-white p-8">
         <div>
-          <p className="font-mono text-sm font-semibold">~/hafiz admin</p>
+          <p className="font-mono text-sm font-semibold">~/apisdsn admin</p>
           <h1 className="mt-1 text-2xl font-semibold">Masuk</h1>
         </div>
         <FieldShell label="Email" htmlFor="email">
