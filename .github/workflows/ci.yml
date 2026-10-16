@@ -119,9 +119,17 @@ jobs:
         if: steps.secrets.outputs.ready == 'true'
         run: |
           install -d -m 700 ~/.ssh
-          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
-          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
-          echo "SSH_CMD=ssh -i $HOME/.ssh/deploy_key -p $PORT -o BatchMode=yes -o StrictHostKeyChecking=yes $DEPLOY_USER@$HOST" >> "$GITHUB_ENV"
+          # tr: a key pasted from Windows can carry \r line endings, which OpenSSH rejects
+          printf '%s\n' "$SSH_KEY" | tr -d '\r' > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$KNOWN_HOSTS" | tr -d '\r' > ~/.ssh/known_hosts
+          if ! ssh-keygen -y -P "" -f ~/.ssh/deploy_key > ~/.ssh/deploy_key.pub 2>/dev/null; then
+            echo "::error::DEPLOY_SSH_KEY is not a valid private key, or it has a passphrase (deploy keys must have none)"
+            exit 1
+          fi
+          # The fingerprint is not secret: compare it with `ssh-keygen -lf ~/.ssh/authorized_keys` on the server
+          echo "Deploy key: $(ssh-keygen -lf ~/.ssh/deploy_key.pub)"
+          echo "Connecting as user: $DEPLOY_USER"
+          echo "SSH_CMD=ssh -i $HOME/.ssh/deploy_key -p $PORT -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes $DEPLOY_USER@$HOST" >> "$GITHUB_ENV"
 
       - name: Upload the compose file
         if: steps.secrets.outputs.ready == 'true'
