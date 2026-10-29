@@ -1,5 +1,5 @@
 import { timingSafeEqual } from 'node:crypto';
-import { revalidateTag } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { SITE_TAG } from '@/lib/api';
 
 export const dynamic = 'force-dynamic';
@@ -18,5 +18,7 @@ export async function POST(request: Request) {
     return Response.json({ error: 'unauthorized' }, { status: 401 });
   }
   revalidateTag(SITE_TAG);
+  // Also drop the cached HTML of every public page (and their preview images)
+  revalidatePath('/[lang]', 'layout');
   return Response.json({ revalidated: true, at: new Date().toISOString() });
 }

@@ -7,7 +7,9 @@ const API_URL = process.env.API_INTERNAL_URL || 'http://localhost:8080';
 export const SITE_TAG = 'site';
 
 async function fetchJson<T>(path: string): Promise<T | null> {
-  const res = await fetch(`${API_URL}${path}`, { cache: 'no-store' });
+  // Not "no-store": that would make every page dynamic. Only 200 responses are cached,
+  // under the same tag that /internal/revalidate clears.
+  const res = await fetch(`${API_URL}${path}`, { next: { revalidate: 3600, tags: [SITE_TAG] } });
   if (res.status === 404) return null;
   if (!res.ok) throw new Error(`API ${path} responded ${res.status}`);
   return (await res.json()) as T;

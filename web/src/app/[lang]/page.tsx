@@ -6,25 +6,64 @@ import { Section } from '@/components/site/Section';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { getSite } from '@/lib/api';
 import { formatPeriod, ui } from '@/lib/i18n';
-import { isLang, mediaUrl, tr, type Lang } from '@/lib/types';
+import { absoluteUrl, jsonLd } from '@/lib/seo';
+import { isLang, mediaUrl, tr, type Lang, type SiteData } from '@/lib/types';
 
-export const dynamic = 'force-dynamic';
+// Cached HTML, re-rendered at most once a minute (and right away after an admin change, see
+// /internal/revalidate). The 60 s also becomes "s-maxage=60" for Cloudflare's edge cache.
+export const revalidate = 60;
 
 type Params = { params: { lang: string } };
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   if (!isLang(params.lang)) return {};
   const { profile } = await getSite();
+  const title = tr(profile.seoTitle, params.lang);
+  const description = tr(profile.seoDescription, params.lang);
   return {
-    title: tr(profile.seoTitle, params.lang),
-    description: tr(profile.seoDescription, params.lang),
-    alternates: { languages: { id: '/id', en: '/en' } },
-    openGraph: {
-      title: tr(profile.seoTitle, params.lang),
-      description: tr(profile.seoDescription, params.lang),
-      locale: params.lang === 'id' ? 'id_ID' : 'en_US',
-      images: profile.photoMediaId ? [mediaUrl(profile.photoMediaId) as string] : undefined,
+    title: { absolute: title },
+    description,
+    alternates: {
+      canonical: `/${params.lang}`,
+      languages: { id: '/id', en: '/en', 'x-default': '/' },
     },
+    // og:image comes from opengraph-image.tsx in this folder
+    openGraph: {
+      type: 'profile',
+      url: `/${params.lang}`,
+      siteName: profile.fullName,
+      title,
+      description,
+      locale: params.lang === 'id' ? 'id_ID' : 'en_US',
+      alternateLocale: params.lang === 'id' ? 'en_US' : 'id_ID',
+    },
+    twitter: { card: 'summary_large_image', title, description },
+  };
+}
+
+/** schema.org Person, so search engines can show the name, role and profiles. */
+function personJsonLd(site: SiteData, lang: Lang) {
+  const { profile } = site;
+  const current = site.experiences.find((e) => e.current) ?? site.experiences[0];
+  const photo = mediaUrl(profile.photoMediaId);
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: profile.fullName,
+    url: absoluteUrl(`/${lang}`),
+    image: photo ? absoluteUrl(photo) : undefined,
+    description: tr(profile.seoDescription, lang),
+    jobTitle: current ? tr(current.role, lang) : undefined,
+    worksFor: current?.current ? { '@type': 'Organization', name: current.organization } : undefined,
+    address: profile.location
+      ? { '@type': 'PostalAddress', addressLocality: profile.location }
+      : undefined,
+    alumniOf: site.education.map((e) => ({ '@type': 'EducationalOrganization', name: e.institution })),
+    knowsAbout: site.skillGroups
+      .flatMap((g) => tr(g.items, lang).split('·'))
+      .map((s) => s.trim())
+      .filter(Boolean),
+    sameAs: [profile.linkedinUrl, profile.githubUrl].filter(Boolean),
   };
 }
 
@@ -43,9 +82,11 @@ export default async function HomePage({ params }: Params) {
     .slice(0, 2)
     .join('');
   const cvUrl = mediaUrl(profile.cvMediaId);
+  const caseStudySlugs = new Set(site.caseStudies.map((c) => c.slug));
 
   return (
     <div style={{ '--accent': profile.accentColor } as React.CSSProperties}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(personJsonLd(site, lang)) }} />
       <SiteHeader lang={lang} path="" logo={profile.logoText} />
 
       <main id="top">
@@ -170,20 +211,35 @@ export default async function HomePage({ params }: Params) {
                   <span className="font-mono text-xs text-muted">{tr(project.tag, lang)}</span>
                   <h3 className="font-mono text-[19px] font-semibold">{project.name}</h3>
                   <p className="flex-grow text-[15px] leading-relaxed text-muted">{tr(project.description, lang)}</p>
-                  {project.repoUrl || project.demoUrl ? (
-                    <div className="flex flex-wrap gap-5 text-[15px] font-medium">
-                      {project.repoUrl ? (
-                        <a href={project.repoUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center hover:text-accent">
-                          {t.repo}
-                        </a>
-                      ) : null}
-                      {project.demoUrl ? (
-                        <a href={project.demoUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center hover:text-accent">
-                          {t.demo}
-                        </a>
-                      ) : null}
-                    </div>
-                  ) : null}
+                  <div className="flex flex-wrap items-center gap-x-5 text-[15px] font-medium">
+                    {caseStudySlugs.has(project.slug) ? (
+                      <Link href={`/${lang}/case-study/${project.slug}`} className="inline-flex min-h-11 items-center text-accent hover:underline">
+                        {t.caseStudyLink}
+                      </Link>
+                    ) : null}
+                    {project.repoUrl ? (
+                      <a href={project.repoUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center hover:text-accent">
+                        {t.repo}
+                      </a>
+                    ) : null}
+                    {project.demoUrl ? (
+                      <a href={project.demoUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center hover:text-accent">
+                        {t.demo}
+                      </a>
+                    ) : null}
+                    {!project.repoUrl && !project.demoUrl ? (
+                      <span
+                        title={t.privateCodeHint}
+                        className="inline-flex min-h-11 items-center gap-1.5 font-mono text-[13px] font-normal text-muted"
+                      >
+                        <svg aria-hidden="true" viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.6">
+                          <rect x="3" y="7" width="10" height="7" rx="1.5" />
+                          <path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" />
+                        </svg>
+                        {t.privateCode}
+                      </span>
+                    ) : null}
+                  </div>
                 </article>
               ))}
             </div>

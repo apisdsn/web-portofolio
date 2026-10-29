@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
 const SESSION_COOKIE = 'portfolio_token';
+const LANGS = new Set(['id', 'en']);
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -11,25 +12,28 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL(`/${lang}`, request.url));
   }
 
-  if (pathname.startsWith('/admin')) {
+  if (pathname === '/admin' || pathname.startsWith('/admin/')) {
     // Real authorization happens in the API; this only avoids flashing the dashboard.
     if (pathname !== '/admin/login' && !request.cookies.has(SESSION_COOKIE)) {
       return NextResponse.redirect(new URL('/admin/login', request.url));
     }
-    return withLang(request, 'id');
+    return NextResponse.next();
   }
 
-  const lang = pathname.split('/')[1];
-  return withLang(request, lang === 'en' ? 'en' : 'id');
-}
+  // /foo or /foo/bar: no such language. Serve the site's own 404 page (inside the
+  // [lang] layout) without changing the address in the browser.
+  const first = pathname.split('/')[1];
+  if (!LANGS.has(first)) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/id${pathname}`;
+    return NextResponse.rewrite(url);
+  }
 
-/** Passes the page language to the root layout so <html lang> is correct. */
-function withLang(request: NextRequest, lang: string) {
-  const headers = new Headers(request.headers);
-  headers.set('x-site-lang', lang);
-  return NextResponse.next({ request: { headers } });
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/((?!api|internal|_next/static|_next/image|favicon.ico|robots.txt).*)'],
+  // Skip the API, internal routes, Next.js assets and any file with an extension
+  // (favicon.ico, robots.txt, sitemap.xml, icon.svg, ...).
+  matcher: ['/((?!api/|internal/|_next/|.*\\.[a-z0-9]+$).*)'],
 };

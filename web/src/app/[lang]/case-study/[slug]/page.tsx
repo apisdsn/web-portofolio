@@ -5,9 +5,15 @@ import { Markdown } from '@/components/site/Markdown';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { getCaseStudy, getSite } from '@/lib/api';
 import { ui } from '@/lib/i18n';
+import { absoluteUrl, jsonLd } from '@/lib/seo';
 import { isLang, tr, type Lang } from '@/lib/types';
 
-export const dynamic = 'force-dynamic';
+// Cached like the home page; see app/[lang]/page.tsx.
+export const revalidate = 60;
+export const dynamicParams = true;
+export function generateStaticParams() {
+  return [] as { slug: string }[];
+}
 
 type Params = { params: { lang: string; slug: string } };
 
@@ -15,12 +21,27 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   if (!isLang(params.lang)) return {};
   const caseStudy = await getCaseStudy(params.slug);
   if (!caseStudy) return {};
+  const title = tr(caseStudy.title, params.lang);
+  const description = tr(caseStudy.summary, params.lang);
+  const path = `/case-study/${caseStudy.slug}`;
   return {
-    title: tr(caseStudy.title, params.lang),
-    description: tr(caseStudy.summary, params.lang),
+    title,
+    description,
     alternates: {
-      languages: { id: `/id/case-study/${caseStudy.slug}`, en: `/en/case-study/${caseStudy.slug}` },
+      canonical: `/${params.lang}${path}`,
+      languages: { id: `/id${path}`, en: `/en${path}` },
     },
+    // og:image comes from opengraph-image.tsx in this folder
+    openGraph: {
+      type: 'article',
+      url: `/${params.lang}${path}`,
+      title,
+      description,
+      locale: params.lang === 'id' ? 'id_ID' : 'en_US',
+      modifiedTime: caseStudy.updatedAt,
+      tags: caseStudy.tags,
+    },
+    twitter: { card: 'summary_large_image', title, description },
   };
 }
 
@@ -46,8 +67,21 @@ export default async function CaseStudyPage({ params }: Params) {
     { label: t.result, value: tr(caseStudy.result, lang) },
   ];
 
+  const article = {
+    '@context': 'https://schema.org',
+    '@type': 'TechArticle',
+    headline: tr(caseStudy.title, lang),
+    description: tr(caseStudy.summary, lang),
+    inLanguage: lang,
+    url: absoluteUrl(`/${lang}/case-study/${caseStudy.slug}`),
+    dateModified: caseStudy.updatedAt,
+    keywords: caseStudy.tags.join(', '),
+    author: { '@type': 'Person', name: site.profile.fullName, url: absoluteUrl(`/${lang}`) },
+  };
+
   return (
     <div style={{ '--accent': site.profile.accentColor } as React.CSSProperties}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(article) }} />
       <SiteHeader lang={lang} path={`/case-study/${caseStudy.slug}`} logo={site.profile.logoText} />
 
       <main className="mx-auto flex max-w-[808px] flex-col gap-14 px-6 pb-24 pt-12">
