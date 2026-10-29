@@ -74,8 +74,9 @@ export default async function HomePage({ params }: Params) {
   const site = await getSite();
   const { profile } = site;
 
+  // Every case study gets the full card with its metrics; the featured one comes first.
   const featured = site.caseStudies.find((c) => c.featured) ?? site.caseStudies[0];
-  const otherCaseStudies = site.caseStudies.filter((c) => c !== featured);
+  const caseStudies = featured ? [featured, ...site.caseStudies.filter((c) => c !== featured)] : [];
   const initials = profile.fullName
     .split(' ')
     .map((part) => part[0])
@@ -130,53 +131,39 @@ export default async function HomePage({ params }: Params) {
           </div>
         </section>
 
-        {featured ? (
+        {caseStudies.length > 0 ? (
           <Section id="case-study" number="01" title={t.sections.caseStudies}>
-            <article className="flex flex-wrap gap-10 rounded-[10px] border border-line bg-surface p-6 sm:p-10">
-              <div className="flex min-w-0 flex-[999_1_420px] flex-col gap-4">
-                <div className="flex flex-wrap gap-2 font-mono text-xs">
-                  {featured.tags.map((tag) => (
-                    <span key={tag} className="rounded bg-chip px-2.5 py-1">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-                <h3 className="text-2xl font-semibold leading-tight sm:text-[28px]">{tr(featured.title, lang)}</h3>
-                <p className="text-[17px] leading-relaxed text-muted">{tr(featured.summary, lang)}</p>
-                <Link
-                  href={`/${lang}/case-study/${featured.slug}`}
-                  className="inline-flex min-h-11 items-center self-start font-semibold text-accent"
-                >
-                  {t.readMore}
-                </Link>
-              </div>
-              {featured.metrics.length > 0 ? (
-                <div className="flex flex-[1_1_280px] flex-col gap-3">
-                  {featured.metrics.slice(0, 2).map((metric, i) => (
-                    <div key={i} className="flex flex-col gap-1.5 rounded-lg border border-line p-5">
-                      <span className="text-[13px] text-muted">{tr(metric.label, lang)}</span>
-                      <span className="font-mono text-xl font-semibold">{metric.value}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : null}
-            </article>
-
-            {otherCaseStudies.length > 0 ? (
-              <div className="flex flex-wrap gap-6">
-                {otherCaseStudies.map((cs) => (
+            {caseStudies.map((cs) => (
+              <article key={cs.id} className="flex flex-wrap gap-10 rounded-[10px] border border-line bg-surface p-6 sm:p-10">
+                <div className="flex min-w-0 flex-[999_1_420px] flex-col gap-4">
+                  <div className="flex flex-wrap gap-2 font-mono text-xs">
+                    {cs.tags.map((tag) => (
+                      <span key={tag} className="rounded bg-chip px-2.5 py-1">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                  <h3 className="text-2xl font-semibold leading-tight sm:text-[28px]">{tr(cs.title, lang)}</h3>
+                  <p className="text-[17px] leading-relaxed text-muted">{tr(cs.summary, lang)}</p>
                   <Link
-                    key={cs.id}
                     href={`/${lang}/case-study/${cs.slug}`}
-                    className="flex flex-[1_1_320px] flex-col gap-3 rounded-[10px] border border-line bg-surface p-7 hover:border-ink"
+                    className="inline-flex min-h-11 items-center self-start font-semibold text-accent"
                   >
-                    <span className="font-mono text-xs text-muted">{cs.tags.join(' · ')}</span>
-                    <h3 className="text-[21px] font-semibold leading-snug">{tr(cs.title, lang)}</h3>
-                    <p className="leading-relaxed text-muted">{tr(cs.summary, lang)}</p>
+                    {t.readMore}
                   </Link>
-                ))}
-              </div>
-            ) : null}
+                </div>
+                {cs.metrics.length > 0 ? (
+                  <div className="flex flex-[1_1_280px] flex-col gap-3">
+                    {cs.metrics.slice(0, 2).map((metric, i) => (
+                      <div key={i} className="flex flex-col gap-1.5 rounded-lg border border-line p-5">
+                        <span className="text-[13px] text-muted">{tr(metric.label, lang)}</span>
+                        <span className="font-mono text-xl font-semibold">{metric.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </article>
+            ))}
           </Section>
         ) : null}
 
